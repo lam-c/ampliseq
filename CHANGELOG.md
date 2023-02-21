@@ -3,6 +3,39 @@
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## nf-core/ampliseq version 2.5.0dev
+
+### `Added`
+
+- [#518](https://github.com/nf-core/ampliseq/pull/518),[#534](https://github.com/nf-core/ampliseq/pull/534) - Add COIDB DADA2 reference taxonomy database
+- [#521](https://github.com/nf-core/ampliseq/pull/521) - Export svg in addition to pdf files for quality plots from DADA2
+- [#538](https://github.com/nf-core/ampliseq/pull/538) - Parameter `--diversity_rarefaction_depth` controls the minimum rarefaction depth for diversity analysis, this allows increasing the rarefaction depth at the cost of excluding low count samples. Parameter `--ancom_sample_min_count` sets the minimum sample counts to retain a sample for ANCOM analysis.
+
+### `Changed`
+
+- [#537](https://github.com/nf-core/ampliseq/pull/537) - Update output generated with option sbdi-export
+- [#541](https://github.com/nf-core/ampliseq/pull/541) - Remove adjustments of taxonomic levels for RDP & SILVA & GTDB & UNITE database for DADA2 taxonomic classification, reduced default of `--dada_tax_agglom_max` from 7 to 6
+
+### `Fixed`
+
+- [#513](https://github.com/nf-core/ampliseq/pull/513) - Template update for nf-core/tools version 2.7.2
+- [#519](https://github.com/nf-core/ampliseq/pull/519) - Adding the pipeline reference to the MultiQC report
+- [#520](https://github.com/nf-core/ampliseq/pull/520),[#530](https://github.com/nf-core/ampliseq/pull/530) - Fix conda packages
+- [#531](https://github.com/nf-core/ampliseq/pull/531) - Update documentation
+- [#535](https://github.com/nf-core/ampliseq/pull/535) - Make sure barrnap runs with fasta input
+
+### `Dependencies`
+
+- [#528](https://github.com/nf-core/ampliseq/pull/528) - Updated QIIME2
+
+| Tool   | Previous version | New version |
+| ------ | ---------------- | ----------- |
+| QIIME2 | 2022.8           | 2022.11     |
+
+### `Removed`
+
+- [#513](https://github.com/nf-core/ampliseq/pull/513) - Removed parameter `--enable_conda`.
+
 ## nf-core/ampliseq version 2.4.1 - 2022-12-07
 
 ### `Added`
