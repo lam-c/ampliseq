@@ -5,10 +5,13 @@ process SBDIEXPORTREANNOTATE {
     conda "conda-forge::r-tidyverse=1.2.1"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
         'https://depot.galaxyproject.org/singularity/r-tidyverse:1.2.1' :
-        'quay.io/biocontainers/r-tidyverse:1.2.1' }"
+        'biocontainers/r-tidyverse:1.2.1' }"
 
     input:
     path taxonomytable
+    val  taxonomymethod
+    val  dbversion
+    val  cut_its
     path predictions
 
     output:
@@ -26,7 +29,7 @@ process SBDIEXPORTREANNOTATE {
         ampliseq_version="v$workflow.manifest.version"
     fi
 
-    sbdiexportreannotate.R \"${params.dada_ref_databases[params.dada_ref_taxonomy]["dbversion"]}\" $taxonomytable \"\$ampliseq_version\" $predictions
+    sbdiexportreannotate.R \"$dbversion\" $taxonomytable $taxonomymethod \"\$ampliseq_version\" $cut_its $predictions
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

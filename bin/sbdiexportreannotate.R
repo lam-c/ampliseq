@@ -16,8 +16,12 @@ suppressPackageStartupMessages(library(tidyverse))
 args            <- commandArgs(trailingOnly=TRUE)
 dbversion       <- args[1]
 taxfile         <- args[2]
-wfversion       <- args[3]
-predfile        <- args[4]
+taxmethod       <- args[3]
+wfversion       <- args[4]
+cut_its         <- args[5]
+predfile        <- args[6]
+
+cut_its = ifelse(cut_its == 'none', '', paste(' cut_its:', cut_its, sep=''))
 
 # Read taxonomy table
 taxonomy <- read.delim(taxfile, sep = '\t', stringsAsFactors = FALSE)
@@ -25,6 +29,11 @@ taxonomy <- read.delim(taxfile, sep = '\t', stringsAsFactors = FALSE)
 # Read the predictions table if provided, otherwise create one
 if ( ! is.na(predfile) ) {
     predictions <- read.delim(predfile, sep = '\t', stringsAsFactors = FALSE)
+    if ( nrow(predictions) < 1 ) {
+        colnames <- names(predictions)
+        predictions <- data.frame(ASV_ID = taxonomy$ASV_ID)
+        predictions[,colnames[colnames != "ASV_ID"]] <- NA
+    }
 } else {
     predictions <- data.frame(ASV_ID = taxonomy$ASV_ID)
 }
@@ -41,15 +50,15 @@ predictions <- data.frame(
 taxtable  <- taxonomy %>%
     inner_join(predictions, by = 'ASV_ID') %>%
     mutate(Domain = if("Domain" %in% colnames(.)) Domain else '') %>%
-    mutate(Kingdom = if("Kingdom" %in% colnames(.)) Kingdom else '') %>%
-    mutate(Phylum = if("Phylum" %in% colnames(.)) Phylum else '') %>%
+    mutate(Kingdom = if("Kingdom" %in% colnames(.)) Kingdom else if ("Supergroup" %in% colnames(.)) Supergroup else '') %>%
+    mutate(Phylum = if("Phylum" %in% colnames(.)) Phylum else if ("Division" %in% colnames(.)) Division else '') %>%
     mutate(Class = if("Class" %in% colnames(.)) Class else '') %>%
     mutate(Order = if("Order" %in% colnames(.)) Order else '') %>%
     mutate(Family = if("Family" %in% colnames(.)) Family else '') %>%
     mutate(Genus = if("Genus" %in% colnames(.)) Genus else '') %>%
     mutate(Species = if("Species" %in% colnames(.)) Species else '') %>%
     mutate(Species_exact = if("Species_exact" %in% colnames(.)) Species_exact else '') %>%
-    mutate(SH = if("SH" %in% colnames(.)) SH else '') %>%
+    mutate(otu = if("SH" %in% colnames(.)) SH else if ("BOLD_bin" %in% colnames(.)) BOLD_bin else '') %>%
     relocate(Domain, .after = sequence) %>%
     relocate(Kingdom, .after = Domain) %>%
     relocate(Phylum, .after = Kingdom) %>%
@@ -59,13 +68,12 @@ taxtable  <- taxonomy %>%
     relocate(Genus, .after = Family) %>%
     relocate(Species, .after = Genus) %>%
     relocate(Species_exact, .after = Species) %>%
-    relocate(SH, .after = Species_exact) %>%
+    relocate(otu, .after = Species_exact) %>%
     rename_with(tolower, Domain:Species_exact) %>%
     rename(
         asv_id_alias = ASV_ID,
         asv_sequence = sequence,
         specificEpithet = species,
-        otu = SH,
         annotation_confidence = confidence
     ) %>%
     mutate(across(.fns = ~str_replace_all(.,' ','_'))) %>%
@@ -103,19 +111,19 @@ taxtable  <- taxonomy %>%
         date_identified = as.character(lubridate::today()),
         reference_db = dbversion,
         annotation_algorithm = case_when(
-            (!(is.na(otu) | otu == ''))                     ~ paste('Ampliseq',wfversion,'(https://nf-co.re/ampliseq) addsh', sep=' '),
-            (!(is.na(species_exact) | species_exact == '')) ~ paste('Ampliseq',wfversion,'(https://nf-co.re/ampliseq) DADA2:assignTaxonomy:addSpecies', sep=' '),
-            TRUE                                            ~ paste('Ampliseq',wfversion,'(https://nf-co.re/ampliseq) DADA2:assignTaxonomy', sep=' ')
+            (taxmethod == 'sintax')                         ~ paste('Ampliseq ',wfversion,' (https://nf-co.re/ampliseq) VSEARCH:sintax',cut_its, sep=' '),
+            (!(is.na(otu) | otu == ''))                     ~ paste('Ampliseq ',wfversion,' (https://nf-co.re/ampliseq) addsh',cut_its, sep=' '),
+            (!(is.na(species_exact) | species_exact == '')) ~ paste('Ampliseq ',wfversion,' (https://nf-co.re/ampliseq) DADA2:assignTaxonomy:addSpecies',cut_its, sep=' '),
+            TRUE                                            ~ paste('Ampliseq ',wfversion,' (https://nf-co.re/ampliseq) DADA2:assignTaxonomy',cut_its, sep='')
         ),
         identification_references = 'https://docs.biodiversitydata.se/analyse-data/molecular-tools/#taxonomy-annotation',
         taxon_remarks = ifelse(!(is.na(domain) | domain == ''), paste('Domain = \'',domain,'\'',sep=''),''),
-        kingdom = ifelse(is.na(kingdom), 'Unassigned', kingdom)
+        kingdom = ifelse(is.na(kingdom) | kingdom == '', 'Unassigned', kingdom)
     ) %>%
     relocate(asv_sequence, .after = asv_id_alias) %>%
     relocate(scientificName:taxonRank, .after = asv_sequence) %>%
     relocate(infraspecificEpithet, .after = specificEpithet) %>%
     relocate(annotation_confidence, .after = otu) %>%
     relocate(date_identified:taxon_remarks, .after = annotation_confidence) %>%
-    select(-domain) %>%
-    select(-species_exact) %>%
+    select_if(!names(.) %in% c('domain', 'species_exact', 'SH', 'BOLD_bin', 'Supergroup', 'Division', 'Subdivision')) %>%
     write_tsv("annotation.tsv", na = '')

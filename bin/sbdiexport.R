@@ -44,15 +44,15 @@ n_samples <- length(colnames(asvs)) - 1
 # Read taxonomy table and make sure all expected columns are there
 taxonomy <- read.delim(taxtable, sep = '\t', stringsAsFactors = FALSE) %>%
     mutate(Domain = if("Domain" %in% colnames(.)) Domain else '') %>%
-    mutate(Kingdom = if("Kingdom" %in% colnames(.)) Kingdom else '') %>%
-    mutate(Phylum = if("Phylum" %in% colnames(.)) Phylum else '') %>%
+    mutate(Kingdom = if("Kingdom" %in% colnames(.)) Kingdom else if ("Supergroup" %in% colnames(.)) Supergroup else '') %>%
+    mutate(Phylum = if("Phylum" %in% colnames(.)) Phylum else if ("Division" %in% colnames(.)) Division else '') %>%
     mutate(Class = if("Class" %in% colnames(.)) Class else '') %>%
     mutate(Order = if("Order" %in% colnames(.)) Order else '') %>%
     mutate(Family = if("Family" %in% colnames(.)) Family else '') %>%
     mutate(Genus = if("Genus" %in% colnames(.)) Genus else '') %>%
     mutate(Species = if("Species" %in% colnames(.)) Species else '') %>%
     mutate(Species_exact = if("Species_exact" %in% colnames(.)) Species_exact else '') %>%
-    mutate(SH = if("SH" %in% colnames(.)) SH else '') %>%
+    mutate(otu = if("SH" %in% colnames(.)) SH else if ("BOLD_bin" %in% colnames(.)) BOLD_bin else '') %>%
     relocate(Domain, .after = sequence) %>%
     relocate(Kingdom, .after = Domain) %>%
     relocate(Phylum, .after = Kingdom) %>%
@@ -62,7 +62,7 @@ taxonomy <- read.delim(taxtable, sep = '\t', stringsAsFactors = FALSE) %>%
     relocate(Genus, .after = Family) %>%
     relocate(Species, .after = Genus) %>%
     relocate(Species_exact, .after = Species) %>%
-    relocate(SH, .after = Species_exact)
+    relocate(otu, .after = Species_exact)
 
 
 # Read the metadata table if provided, otherwise create one
@@ -144,14 +144,13 @@ asvtax <- asvs %>%
     mutate(across(domain:species, ~str_replace_all(.,' ','_'))) %>%
     rename(
         specificEpithet = species,
-        otu = SH,
         asv_id_alias = ASV_ID,
         DNA_sequence = sequence
     ) %>%
     mutate(
         domain = str_remove(domain, 'Reversed:_'),
         associatedSequences = '',
-        kingdom = ifelse(is.na(kingdom), 'Unassigned', kingdom),
+        kingdom = ifelse(is.na(kingdom) | kingdom == '', 'Unassigned', kingdom),
         specificEpithet = ifelse(!(is.na(Species_exact) | Species_exact == ''), Species_exact, specificEpithet),
         specificEpithet = ifelse( (!(is.na(genus) | genus == '')), str_replace(specificEpithet, paste('^',genus, '[_[:space:]]' ,sep=''), ''), specificEpithet),
         specificEpithet = ifelse( str_detect(specificEpithet, '^[sS]p{1,2}.?$'), '', specificEpithet),
@@ -161,5 +160,5 @@ asvtax <- asvs %>%
     ) %>%
     relocate(otu, .after = infraspecificEpithet) %>%
     relocate(associatedSequences, .before = domain) %>%
-    select(-confidence, -domain, -Species_exact) %>%
+    select_if(!names(.) %in% c('confidence','domain', 'Species_exact', 'SH', 'BOLD_bin', 'Supergroup', 'Division', 'Subdivision')) %>%
     write_tsv("asv-table.tsv", na = '')

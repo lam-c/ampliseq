@@ -1,0 +1,25 @@
+{
+    "input": {
+        "content": [
+            "Samplesheet_novaseq.tsv:md5,bcca78fe24736f4ee4ea26fdbd47ee64"
+        ],
+        "timestamp": "2023-06-20T00:10:02+0000"
+    },
+    "dada2": {
+        "content": [
+            "ASV_seqs.fasta:md5,60c7cc4669df672109fce853dfa874fd",
+            "ASV_table.tsv:md5,db74c8b5abf372fdaed19d0bf23c91c8",
+            "DADA2_stats.tsv:md5,5f82ca12036dae5da84a93b6fce96c36",
+            "DADA2_table.rds:md5,e7cc351e115cccdeabd0d0e9e7d9045a",
+            "DADA2_table.tsv:md5,fba33455974dd6c07ce54a72f7147425"
+        ],
+        "timestamp": "2023-06-20T00:10:02+0000"
+    },
+    "multiqc": {
+        "content": [
+            "multiqc_fastqc.txt:md5,a99548124efd185a7d4e33245edcb81b",
+            "multiqc_general_stats.txt:md5,195ce3e0c1b032459040613802d25d50"
+        ],
+        "timestamp": "2023-06-20T00:10:02+0000"
+    }
+}

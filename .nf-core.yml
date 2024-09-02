@@ -1,5 +1,17 @@
 repository_type: pipeline
-
 lint:
+  files_unchanged:
+    - .gitattributes
   files_exist:
     - conf/igenomes.config
+  nextflow_config:
+    - config_defaults:
+        - params.report_template
+        - params.report_css
+        - params.report_logo
+  actions_ci: False
+update:
+  https://github.com/nf-core/modules.git:
+    nf-core:
+      mafft: "feb29be775d9e41750180539e9a3bdce801d0609"
+nf_core_version: "2.14.1"
