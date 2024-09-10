@@ -5,6 +5,7 @@
 include { QIIME2_EXPORT_ABSOLUTE                } from '../../modules/local/qiime2_export_absolute'
 include { QIIME2_EXPORT_RELASV                  } from '../../modules/local/qiime2_export_relasv'
 include { QIIME2_EXPORT_RELTAX                  } from '../../modules/local/qiime2_export_reltax'
+include { QIIME2_EXPORT_DIVERSITY               } from '../../modules/local/qiime2_export_diversity'
 include { COMBINE_TABLE as COMBINE_TABLE_QIIME2 } from '../../modules/local/combine_table'
 include { COMBINE_TABLE as COMBINE_TABLE_DADA2  } from '../../modules/local/combine_table'
 include { COMBINE_TABLE as COMBINE_TABLE_PPLACE } from '../../modules/local/combine_table'
@@ -21,6 +22,7 @@ workflow QIIME2_EXPORT {
     ch_SINTAX_tax_tsv
     tax_agglom_min
     tax_agglom_max
+    ch_qza
 
     main:
     ch_versions_qiime2_export = Channel.empty()
@@ -53,9 +55,13 @@ workflow QIIME2_EXPORT {
     COMBINE_TABLE_SINTAX ( QIIME2_EXPORT_RELASV.out.tsv, QIIME2_EXPORT_ABSOLUTE.out.fasta, ch_SINTAX_tax_tsv, 'rel-table-ASV_with-SINTAX-tax.tsv' )
     ch_versions_qiime2_export = ch_versions_qiime2_export.mix(COMBINE_TABLE_SINTAX.out.versions)
 
+    //export_diversity_core
+    QIIME2_EXPORT_DIVERSITY( ch_qza )
+
     emit:
     abs_fasta = QIIME2_EXPORT_ABSOLUTE.out.fasta
     abs_tsv   = QIIME2_EXPORT_ABSOLUTE.out.tsv
     rel_tsv   = QIIME2_EXPORT_RELASV.out.tsv
+    core_tsv  = QIIME2_EXPORT_DIVERSITY.out.tsv
     versions  = ch_versions_qiime2_export
 }

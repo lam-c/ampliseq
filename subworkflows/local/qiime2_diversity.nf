@@ -82,6 +82,8 @@ workflow QIIME2_DIVERSITY {
     }
 
     emit:
+    vector   = !skip_diversity_indices ? QIIME2_DIVERSITY_CORE.out.vector : []
+    distance = !skip_diversity_indices ? QIIME2_DIVERSITY_CORE.out.distance : []
     depth    = !skip_diversity_indices ? QIIME2_DIVERSITY_CORE.out.depth : []
     alpha    = !skip_diversity_indices ? QIIME2_DIVERSITY_ALPHA.out.alpha : []
     beta     = !skip_diversity_indices ? QIIME2_DIVERSITY_BETA.out.beta : []

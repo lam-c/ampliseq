@@ -765,21 +765,6 @@ workflow AMPLISEQ {
             ch_seq = QIIME2_INSEQ.out.qza
             ch_tsv = ch_dada2_asv
         }
-        //Export various ASV tables
-        if (!params.skip_abundance_tables) {
-            QIIME2_EXPORT ( ch_asv, ch_seq, ch_tax, ch_qiime2_tax, ch_dada2_tax, ch_pplace_tax, ch_sintax_tax, tax_agglom_min, tax_agglom_max )
-            ch_versions = ch_versions.mix( QIIME2_EXPORT.out.versions )
-        }
-
-        if (!params.skip_barplot) {
-            QIIME2_BARPLOT ( ch_metadata.ifEmpty([]), ch_asv, ch_tax, '' )
-            ch_versions = ch_versions.mix( QIIME2_BARPLOT.out.versions )
-        }
-
-        if (params.metadata_category_barplot) {
-            QIIME2_BARPLOTAVG ( ch_metadata, QIIME2_EXPORT.out.rel_tsv, ch_tax, params.metadata_category_barplot )
-            ch_versions = ch_versions.mix( QIIME2_BARPLOTAVG.out.versions )
-        }
 
         //Select metadata categories for diversity analysis & ancom
         if (params.metadata_category) {
@@ -804,6 +789,7 @@ workflow AMPLISEQ {
         }
 
         //Diversity indices
+        ch_qza   = Channel.empty()
         if ( params.metadata && (!params.skip_alpha_rarefaction || !params.skip_diversity_indices) ) {
             QIIME2_DIVERSITY (
                 ch_metadata,
@@ -817,7 +803,24 @@ workflow AMPLISEQ {
                 params.skip_diversity_indices,
                 params.diversity_rarefaction_depth
             )
+            ch_qza = ch_qza.mix( QIIME2_DIVERSITY.out.vector.flatten() ).mix( QIIME2_DIVERSITY.out.distance.flatten() )
             ch_versions = ch_versions.mix( QIIME2_DIVERSITY.out.versions )
+        }
+
+        //Export various ASV tables & diversity indices
+        if (!params.skip_abundance_tables) {
+            QIIME2_EXPORT ( ch_asv, ch_seq, ch_tax, ch_qiime2_tax, ch_dada2_tax, ch_pplace_tax, ch_sintax_tax, tax_agglom_min, tax_agglom_max, ch_qza )
+            ch_versions = ch_versions.mix( QIIME2_EXPORT.out.versions )
+        }
+
+        if (!params.skip_barplot) {
+            QIIME2_BARPLOT ( ch_metadata.ifEmpty([]), ch_asv, ch_tax, '' )
+            ch_versions = ch_versions.mix( QIIME2_BARPLOT.out.versions )
+        }
+
+        if (params.metadata_category_barplot) {
+            QIIME2_BARPLOTAVG ( ch_metadata, QIIME2_EXPORT.out.rel_tsv, ch_tax, params.metadata_category_barplot )
+            ch_versions = ch_versions.mix( QIIME2_BARPLOTAVG.out.versions )
         }
 
         //Perform ANCOM and ANCOMBC tests
